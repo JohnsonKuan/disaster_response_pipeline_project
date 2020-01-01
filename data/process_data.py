@@ -1,16 +1,73 @@
 import sys
+import numpy as np
+import pandas as pd
+from sqlalchemy import create_engine
 
 
 def load_data(messages_filepath, categories_filepath):
-    pass
+    """ load messages.csv and categories.csv datasets
+    
+    Parameters:
+    messages_filepath: path to messages.csv file
+    categories_filepath: path to categories.csv file
+    
+    Returns:
+    df: merged messages and categories file on common id as dataframe
+    
+    
+    """
+    
+    messages = pd.read_csv(messages_filepath) # read messages file
+    categories = pd.read_csv(categories_filepath) # read categories file
+    
+    df = messages.merge(categories, on = 'id') # merge messages and categories file on common id
+    
+    return df
 
 
 def clean_data(df):
-    pass
+    """ clean dataframe
+    
+    Parameters:
+    df: merged messages and categories file on common id as dataframe
+    
+    Returns:
+    df: cleansed dataframe
+    
+    """
+  
+    categories = df['categories'].str.split(';', expand = True) # split categories column on string ; and expand as individual columns
+    
+    category_colnames = categories.loc[0].map(lambda x: x[:-2]).tolist() # extract category column names
+    
+    categories.columns = category_colnames # change category column names
+    
+    categories = categories.apply(lambda col: pd.to_numeric(col.str[-1])) # transform category string to binary indicator (0 or 1)
+    
+    df.drop(columns = ['categories'], inplace = True) # drop original categories column
+    
+    df = pd.concat([df, categories], axis = 1) # concatenate new categories dataframe with original dataframe
+    
+    df.drop_duplicates(inplace = True) # drop duplicates
+    
+    return df
 
 
 def save_data(df, database_filename):
-    pass  
+    """ save dataframe to a table in a sqlite database
+    
+    Parameters:
+    df: dataframe to save
+    
+    Returns:
+    database_filename: name of database to use
+    
+    """
+
+    engine = create_engine('sqlite:///' + database_filename)
+    df.to_sql('message_category', engine, index=False) # save to table in database
+    
+    pass
 
 
 def main():
