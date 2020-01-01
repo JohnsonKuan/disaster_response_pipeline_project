@@ -42,7 +42,8 @@ def clean_data(df):
     
     categories.columns = category_colnames # change category column names
     
-    categories = categories.apply(lambda col: pd.to_numeric(col.str[-1])) # transform category string to binary indicator (0 or 1)
+    # note: there are instances of 'related-2' in the categories field so need to apply additional logic to create a binary indicator    
+    categories = categories.apply(lambda col: (pd.to_numeric(col.str[-1]) > 0).map(int)) # transform category string to binary indicator (0 or 1)
     
     df.drop(columns = ['categories'], inplace = True) # drop original categories column
     
