@@ -1,23 +1,138 @@
 import sys
 
+import nltk
+nltk.download(['punkt', 'wordnet', 'averaged_perceptron_tagger', 'maxent_ne_chunker', 'words'])
+
+import re
+import numpy as np
+import pandas as pd
+import pickle
+
+from sqlalchemy import create_engine
+
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+
+from sklearn.metrics import confusion_matrix, classification_report, f1_score
+from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.decomposition import TruncatedSVD
+
+from gensim.sklearn_api import D2VTransformer
+
+
+class Doc2VecExtractor(BaseEstimator, TransformerMixin):
+    """Custom Doc2Vec Estimator Transformer class to use in sci-kit learn pipeline
+    
+    Johnson Kuan 2020
+    
+    """
+
+    def __init__(self, dm = 1, min_count = 1, size = 20):
+        
+        # https://radimrehurek.com/gensim/sklearn_api/d2vmodel.html
+        self.d2v_model = D2VTransformer(dm = dm, min_count = min_count, size = size)        
+        
+    def tokenize(self, x):
+        return pd.Series(x).map(tokenize).tolist() # prepare data for doc2vec algorithm
+    
+    def fit(self, x, y=None):
+        
+        text = self.tokenize(x)
+        
+        self.d2v_model.fit(text) # run doc2vec algorithm
+        
+        return self
+
+    def transform(self, x):
+        
+        text = self.tokenize(x)
+
+        return self.d2v_model.transform(text) # return document vectors
+
 
 def load_data(database_filepath):
-    pass
+    """ load data from table in sqlite database
+    
+    Parameters:
+    database_filepath: path to database
+    
+    Returns:
+    X: features dataset
+    Y: labels dataset
+    category_names: name of labels
+    
+    
+    """  
+  
+    engine = create_engine('sqlite:///' + database_filepath)
+    df = pd.read_sql_table('message_category', engine) # read table
+    X = df.message.values # text column
+    Y = df.iloc[:,4:].values # 36 labels  
+    
+    category_names = df.columns[4:].tolist()    
+
+    return X, Y, category_names
 
 
 def tokenize(text):
-    pass
+    """clean and tokenize text string"""
+    
+    tokens = word_tokenize(text)
+    lemmatizer = WordNetLemmatizer()
+
+    clean_tokens = []
+    for tok in tokens:
+        clean_tok = lemmatizer.lemmatize(tok).lower().strip()
+        clean_tokens.append(clean_tok)
+
+    return clean_tokens  
 
 
 def build_model():
-    pass
+    """build model pipeline"""
+    
+    pipeline = Pipeline([
+
+            ('features', FeatureUnion([
+
+                ('tsvd', Pipeline([
+                    ('count_vect', CountVectorizer(tokenizer = tokenize)),
+                    ('tfidf', TfidfTransformer()),
+                    ('tsvd', TruncatedSVD(n_components = 30))
+                ])),
+
+                ('doc2vec', Doc2VecExtractor(size = 30)) # doc2vec model using custom estimator transfomer class
+            ])),
+
+            ('clf', RandomForestClassifier(n_estimators = 100))
+        ])  
+    
+    return pipeline
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    """Report the f1 score, precision and recall for each output category of the dataset"""
+  
+    Y_pred = model.predict(X_test)
+  
+    for i, col in enumerate(category_names):
+        print(f'Category: {col}')
+        print(classification_report(Y_test[:,i], Y_pred[:,i]))
+    
     pass
 
 
 def save_model(model, model_filepath):
+  
+    with open(model_filepath, 'wb') as f:
+        pickle.dump(model ,f)
+    
     pass
 
 
