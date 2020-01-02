@@ -25,35 +25,7 @@ from sklearn.decomposition import TruncatedSVD
 
 from gensim.sklearn_api import D2VTransformer
 
-
-class Doc2VecExtractor(BaseEstimator, TransformerMixin):
-    """Custom Doc2Vec Estimator Transformer class to use in sci-kit learn pipeline
-    
-    Johnson Kuan 2020
-    
-    """
-
-    def __init__(self, dm = 1, min_count = 1, size = 20):
-        
-        # https://radimrehurek.com/gensim/sklearn_api/d2vmodel.html
-        self.d2v_model = D2VTransformer(dm = dm, min_count = min_count, size = size)        
-        
-    def tokenize(self, x):
-        return pd.Series(x).map(tokenize).tolist() # prepare data for doc2vec algorithm
-    
-    def fit(self, x, y=None):
-        
-        text = self.tokenize(x)
-        
-        self.d2v_model.fit(text) # run doc2vec algorithm
-        
-        return self
-
-    def transform(self, x):
-        
-        text = self.tokenize(x)
-
-        return self.d2v_model.transform(text) # return document vectors
+from utils import Doc2VecExtractor
 
 
 def load_data(database_filepath):
