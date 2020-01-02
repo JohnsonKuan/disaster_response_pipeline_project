@@ -9,20 +9,6 @@ from gensim.sklearn_api import D2VTransformer
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
-def tokenize(text):
-    """clean and tokenize text string"""
-    
-    tokens = word_tokenize(text)
-    lemmatizer = WordNetLemmatizer()
-
-    clean_tokens = []
-    for tok in tokens:
-        clean_tok = lemmatizer.lemmatize(tok).lower().strip()
-        clean_tokens.append(clean_tok)
-
-    return clean_tokens      
-
-
 class Doc2VecExtractor(BaseEstimator, TransformerMixin):
     """Custom Doc2Vec Estimator Transformer class to use in sci-kit learn pipeline
     
@@ -33,10 +19,23 @@ class Doc2VecExtractor(BaseEstimator, TransformerMixin):
     def __init__(self, dm = 1, min_count = 1, size = 20):
         
         # https://radimrehurek.com/gensim/sklearn_api/d2vmodel.html
-        self.d2v_model = D2VTransformer(dm = dm, min_count = min_count, size = size)        
+        self.d2v_model = D2VTransformer(dm = dm, min_count = min_count, size = size)   
+        
+    def tokenize_clean(self, text):
+        """clean and tokenize text string"""
+
+        tokens = word_tokenize(text)
+        lemmatizer = WordNetLemmatizer()
+
+        clean_tokens = []
+        for tok in tokens:
+            clean_tok = lemmatizer.lemmatize(tok).lower().strip()
+            clean_tokens.append(clean_tok)
+
+        return clean_tokens              
         
     def tokenize(self, x):
-        return pd.Series(x).map(tokenize).tolist() # prepare data for doc2vec algorithm
+        return pd.Series(x).map(self.tokenize_clean).tolist() # prepare data for doc2vec algorithm
     
     def fit(self, x, y=None):
         
