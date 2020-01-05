@@ -84,12 +84,16 @@ def build_model():
                     # ,('tsvd', TruncatedSVD(n_components = 50))
                 ]))
 
-                ,('doc2vec', Doc2VecExtractor(size = 20)) # custom Estimator Transformer class using gensim Doc2Vec model
+                # ,('doc2vec', Doc2VecExtractor(size = 20))
             ])),
-            ('clf', MultiOutputClassifier(XGBClassifier(random_state = 1, gamma = 0.2, verbosity = 1)))
+            ('clf', MultiOutputClassifier(XGBClassifier(random_state = 1, verbosity = 1)))
         ])
     
-    return pipeline
+    parameters = {'clf__estimator__gamma': [0, 0.1, 0.2]}
+    
+    cv = GridSearchCV(pipeline, param_grid = parameters)    
+    
+    return cv
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
