@@ -1,3 +1,5 @@
+
+
 import json
 import plotly
 import pandas as pd
@@ -43,6 +45,11 @@ def index():
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
     
+    # Percentage of messages with each category
+    category_pct = (df.iloc[:,4:].sum() / df.shape[0])
+    category_names = list(category_pct.index)
+    category_pct_val = category_pct.values
+    
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
     graphs = [
@@ -61,6 +68,25 @@ def index():
                 },
                 'xaxis': {
                     'title': "Genre"
+                }
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    y=category_names,
+                    x=category_pct_val,
+                    orientation='h'
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution (%) of Message Categories',
+                'yaxis': {
+                    'title': "% of Messages"
+                },
+                'xaxis': {
+                    'title': "Category"
                 }
             }
         }
