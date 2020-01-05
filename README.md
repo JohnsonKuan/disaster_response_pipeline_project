@@ -30,6 +30,9 @@ Project uses disaster data from: https://www.figure-eight.com/
 
 The dataset contains real messages from disasters and labels corresponding to the message category. There are 36 categories and each message can be tagged with multiple categories.
 
+* data/disaster_categories.csv
+* data/disaster_messages.csv
+
 ## Dependencies
 
 I included a requirements.txt file with dependencies
