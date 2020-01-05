@@ -1,21 +1,21 @@
-import sys
-
 import nltk
 nltk.download(['punkt', 'wordnet', 'averaged_perceptron_tagger', 'maxent_ne_chunker', 'words'])
 
 import re
 import numpy as np
 import pandas as pd
-import pickle
 
 from sqlalchemy import create_engine
+
+from gensim.sklearn_api import D2VTransformer
 
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 
 from sklearn.metrics import confusion_matrix, classification_report, f1_score
 from sklearn.model_selection import GridSearchCV
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline, FeatureUnion
@@ -23,9 +23,12 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.decomposition import TruncatedSVD
 
-from gensim.sklearn_api import D2VTransformer
+from utils import Doc2VecExtractor # I wrote a custom estimator transformer class
 
-from utils import Doc2VecExtractor
+import sys
+import pickle
+
+from xgboost import XGBClassifier
 
 
 def load_data(database_filepath):
@@ -46,6 +49,8 @@ def load_data(database_filepath):
     df = pd.read_sql_table('message_category', engine) # read table
     X = df.message.values # text column
     Y = df.iloc[:,4:].values # 36 labels  
+    
+    df.drop(columns = ['child_alone'], inplace = True) # there's only 0 values for this indicator so we can drop for this project    
     
     category_names = df.columns[4:].tolist()    
 
@@ -74,16 +79,15 @@ def build_model():
             ('features', FeatureUnion([
 
                 ('tsvd', Pipeline([
-                    ('count_vect', CountVectorizer(tokenizer = tokenize)),
-                    ('tfidf', TfidfTransformer()),
-                    ('tsvd', TruncatedSVD(n_components = 30))
-                ])),
+                    ('count_vect', CountVectorizer(tokenizer = tokenize))
+                    ,('tfidf', TfidfTransformer())
+                    # ,('tsvd', TruncatedSVD(n_components = 50))
+                ]))
 
-                ('doc2vec', Doc2VecExtractor(size = 30)) # doc2vec model using custom estimator transfomer class
+                ,('doc2vec', Doc2VecExtractor(size = 20))
             ])),
-
-            ('clf', RandomForestClassifier(n_estimators = 100))
-        ])  
+            ('clf', MultiOutputClassifier(XGBClassifier(random_state = 1, gamma = 0.2, verbosity = 1)))
+        ])
     
     return pipeline
 
