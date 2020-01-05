@@ -84,7 +84,7 @@ def build_model():
                     # ,('tsvd', TruncatedSVD(n_components = 50))
                 ]))
 
-                ,('doc2vec', Doc2VecExtractor(size = 20))
+                ,('doc2vec', Doc2VecExtractor(size = 20)) # custom Estimator Transformer class using gensim Doc2Vec model
             ])),
             ('clf', MultiOutputClassifier(XGBClassifier(random_state = 1, gamma = 0.2, verbosity = 1)))
         ])
