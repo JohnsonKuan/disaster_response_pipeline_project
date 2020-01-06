@@ -56,4 +56,4 @@ pip install -r requirements.txt
 
 ## Image of Home Page
 
-![Home Page](https://github.com/JohnsonKuan/disaster_response_pipeline_project/blob/master/Disaster%20Response%20Project%20-%20Home%20Page.png)
+![Home Page](https://github.com/JohnsonKuan/disaster_response_pipeline_project/blob/master/Disaster%20Reponse%20Project%20-%20Home%20Page%20-%20VM%20Link.png)
