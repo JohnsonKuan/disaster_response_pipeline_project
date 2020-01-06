@@ -17,9 +17,13 @@ class Doc2VecExtractor(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, dm = 1, min_count = 1, size = 20):
+      
+        self.dm = dm
+        self.min_count = min_count
+        self.size = size
         
         # https://radimrehurek.com/gensim/sklearn_api/d2vmodel.html
-        self.d2v_model = D2VTransformer(dm = dm, min_count = min_count, size = size)   
+        self.d2v_model = D2VTransformer(dm = self.dm, min_count = self.min_count, size = self.size)   
         
     def tokenize_clean(self, text):
         """clean and tokenize text string"""
