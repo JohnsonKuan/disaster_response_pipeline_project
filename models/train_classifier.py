@@ -81,7 +81,7 @@ def build_model():
                 ('tsvd', Pipeline([
                     ('count_vect', CountVectorizer(tokenizer = tokenize))
                     ,('tfidf', TfidfTransformer())
-                    # ,('tsvd', TruncatedSVD(n_components = 50))
+                    ,('tsvd', TruncatedSVD(n_components = 50))
                 ]))
 
                 ,('doc2vec', Doc2VecExtractor(size = 20))
@@ -91,7 +91,7 @@ def build_model():
     
     parameters = {'clf__estimator__gamma': [0, 0.1]}
     
-    cv = GridSearchCV(pipeline, param_grid = parameters)    
+    cv = GridSearchCV(pipeline, param_grid = parameters, verbose = 2)    
     
     return cv
 
