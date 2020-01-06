@@ -53,3 +53,7 @@ pip install -r requirements.txt
     `python run.py`
 
 3. Go to http://0.0.0.0:3001/
+
+## Image of Home Page
+
+![Home Page](https://github.com/JohnsonKuan/disaster_response_pipeline_project/blob/master/Disaster%20Response%20Project%20-%20Home%20Page.png)
